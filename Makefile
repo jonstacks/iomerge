@@ -1,2 +1,2 @@
 test:
-	go test -race -coverprofile=cover.out .
+	go test -v -race -coverprofile=cover.out .

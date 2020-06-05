@@ -3,6 +3,7 @@ package iomerge
 import (
 	"bytes"
 	"compress/gzip"
+	"io"
 	"io/ioutil"
 	"testing"
 
@@ -11,26 +12,22 @@ import (
 
 func TestStreamGzipMerger(t *testing.T) {
 	m := NewStreamGzipMerger(10)
-	readAllDone := make(chan bool)
 
-	go func() {
-		reader, err := gzip.NewReader(m.Out())
+	m.Read(func(r io.Reader) error {
+		reader, err := gzip.NewReader(r)
 		assert.NoError(t, err)
 		out, err := ioutil.ReadAll(reader)
 		assert.NoError(t, err)
 		assert.Equal(t, "I am File 1, Line 1\nI am File 2, Line 1\n", string(out))
-		readAllDone <- true
-	}()
+		return err
+	})
 
-	go func() {
-		in := m.In()
+	m.Write(func(in chan<- io.Reader) {
 		in <- bytes.NewReader([]byte("I am File 1, Line 1\n"))
 		in <- bytes.NewReader([]byte("I am File 2, Line 1\n"))
-		m.Close()
-	}()
+	})
 
 	assert.NoError(t, m.Wait())
-	<-readAllDone
 }
 
 func TestStreamGzipMergerImplementsMerger(t *testing.T) {

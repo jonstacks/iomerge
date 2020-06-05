@@ -2,29 +2,38 @@ package iomerge
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+// m.Read(func(r io.Reader) error {
+//     // Do something with reader
+//     out, err := ioutil.ReadAll(r)
+//     return err
+//})
+
+// m.Write(func(in chan<- io.Reader) {
+//
+// })
+
 func TestStreamMerger(t *testing.T) {
 	m := NewStreamMerger(10)
-	readAllDone := make(chan bool)
 
-	go func() {
-		out, err := ioutil.ReadAll(m.Out())
-		assert.NoError(t, err)
+	m.Read(func(r io.Reader) error {
+		out, err := ioutil.ReadAll(r)
 		assert.Equal(t, `{"msg": "hello world"}{"msg": "another hello"}`, string(out))
-		readAllDone <- true
-	}()
-	in := m.In()
-	in <- bytes.NewReader([]byte(`{"msg": "hello world"}`))
-	in <- bytes.NewReader([]byte(`{"msg": "another hello"}`))
-	m.Close()
+		return err
+	})
+
+	m.Write(func(in chan<- io.Reader) {
+		in <- bytes.NewReader([]byte(`{"msg": "hello world"}`))
+		in <- bytes.NewReader([]byte(`{"msg": "another hello"}`))
+	})
 
 	assert.NoError(t, m.Wait())
-	<-readAllDone
 }
 
 func TestStreamMergerImplementsMerger(t *testing.T) {
