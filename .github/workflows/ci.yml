@@ -8,9 +8,17 @@ jobs:
       matrix:
         go: ['1.13', '1.14']
       fail-fast: false
+    env:
+      GO_VERSION: ${{ matrix.go }}
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v1
       with:
-        go-version: ${{ matrix.go-version }}
+        go-version: ${{ matrix.go }}
     - run: make test
+    - name: Upload Coverage Report
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./cover.out
+        env_vars: GO_VERSION
