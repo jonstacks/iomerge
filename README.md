@@ -1,6 +1,8 @@
 # iomerge
 
 ![CI](https://github.com/jonstacks/iomerge/workflows/CI/badge.svg)
+[![codecov](https://codecov.io/gh/jonstacks/iomerge/branch/master/graph/badge.svg)](https://codecov.io/gh/jonstacks/iomerge)
+
 
 A golang package for merging multiple io streams together.
 
